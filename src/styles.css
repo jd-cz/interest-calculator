@@ -53,6 +53,17 @@ p {
   gap: 2rem;
 }
 
+.locale-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+.locale-select select {
+  min-width: 140px;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.2em;

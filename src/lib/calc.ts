@@ -8,7 +8,8 @@ export type CalculationInput = {
 };
 
 export type YearlyRow = {
-  yearLabel: string;
+  yearNumber: number;
+  isPartial: boolean;
   endBalance: number;
   yearlyContributions: number;
   yearlyInterest: number;
@@ -63,7 +64,6 @@ export function calculateCompoundInterest(
     if (isYearEnd || isFinalMonth) {
       const yearNumber = Math.ceil(month / 12);
       const isPartial = month % 12 !== 0;
-      const yearLabel = isPartial ? `Year ${yearNumber} (partial)` : `Year ${yearNumber}`;
       const totalInterest = balance - totalContributions;
       const previousRow = yearlyRows[yearlyRows.length - 1];
       const previousBalance = previousRow ? previousRow.endBalance : principal;
@@ -73,7 +73,8 @@ export function calculateCompoundInterest(
       const yearlyContributions = totalContributions - previousTotalContributions;
       const yearlyInterest = balance - previousBalance - yearlyContributions;
       yearlyRows.push({
-        yearLabel,
+        yearNumber,
+        isPartial,
         endBalance: balance,
         yearlyContributions,
         yearlyInterest,
