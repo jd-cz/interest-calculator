@@ -3,7 +3,8 @@ export type CalculationInput = {
   annualRatePercent: number;
   years: number;
   compoundsPerYear: number;
-  monthlyContribution: number;
+  contributionAmount: number;
+  contributionFrequency: "monthly" | "annual";
 };
 
 export type YearlyRow = {
@@ -25,7 +26,14 @@ export type CalculationResult = {
 export function calculateCompoundInterest(
   input: CalculationInput
 ): CalculationResult {
-  const { principal, annualRatePercent, years, compoundsPerYear, monthlyContribution } =
+  const {
+    principal,
+    annualRatePercent,
+    years,
+    compoundsPerYear,
+    contributionAmount,
+    contributionFrequency,
+  } =
     input;
 
   const annualRate = annualRatePercent / 100;
@@ -40,10 +48,17 @@ export function calculateCompoundInterest(
   // Effective monthly rate = (1 + r / n)^(n/12) - 1
   // Periodic update: B_m = B_{m-1} * (1 + r_m) + C
   for (let month = 1; month <= months; month += 1) {
-    balance = balance * (1 + monthlyRate) + monthlyContribution;
-    totalContributions += monthlyContribution;
-
     const isYearEnd = month % 12 === 0;
+    const contributionThisMonth =
+      contributionFrequency === "monthly"
+        ? contributionAmount
+        : isYearEnd
+          ? contributionAmount
+          : 0;
+
+    balance = balance * (1 + monthlyRate) + contributionThisMonth;
+    totalContributions += contributionThisMonth;
+
     const isFinalMonth = month === months;
     if (isYearEnd || isFinalMonth) {
       const yearNumber = Math.ceil(month / 12);

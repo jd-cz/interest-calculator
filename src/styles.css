@@ -215,6 +215,10 @@ th {
   font-weight: 600;
 }
 
+.end-balance {
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .content {
     grid-template-columns: 1fr;

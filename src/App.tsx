@@ -9,22 +9,24 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 2,
 });
 
-type FieldErrors = Partial<Record<keyof FormState, string>>;
-
 type FormState = {
   principal: string;
   annualRatePercent: string;
   years: string;
   compoundsPerYear: string;
-  monthlyContribution: string;
+  contributionAmount: string;
+  contributionFrequency: "monthly" | "annual";
 };
 
+type FieldErrors = Partial<Record<keyof FormState, string>>;
+
 const defaultState: FormState = {
-  principal: "10000",
+  principal: "0",
   annualRatePercent: "6",
   years: "10",
   compoundsPerYear: "12",
-  monthlyContribution: "200",
+  contributionAmount: "200",
+  contributionFrequency: "monthly",
 };
 
 const compoundOptions = [
@@ -74,9 +76,14 @@ export default function App() {
   function validate(): { parsed: Record<string, number>; errors: FieldErrors } {
     const nextErrors: FieldErrors = {};
 
-    const principal = parseNumber(formState.principal);
-    if (principal === null || principal <= 0) {
-      nextErrors.principal = "Enter a principal greater than 0.";
+    let principal: number | null = null;
+    if (formState.principal.trim() === "") {
+      principal = 0;
+    } else {
+      principal = parseNumber(formState.principal);
+      if (principal === null || principal < 0) {
+        nextErrors.principal = "Enter a principal of 0 or higher.";
+      }
     }
 
     const annualRatePercent = parseNumber(formState.annualRatePercent);
@@ -94,13 +101,13 @@ export default function App() {
       nextErrors.compoundsPerYear = "Select a compounding frequency.";
     }
 
-    let monthlyContribution: number | null = null;
-    if (formState.monthlyContribution.trim() === "") {
-      monthlyContribution = 0;
+    let contributionAmount: number | null = null;
+    if (formState.contributionAmount.trim() === "") {
+      contributionAmount = 0;
     } else {
-      monthlyContribution = parseNumber(formState.monthlyContribution);
-      if (monthlyContribution === null || monthlyContribution < 0) {
-        nextErrors.monthlyContribution = "Enter a monthly contribution of 0 or higher.";
+      contributionAmount = parseNumber(formState.contributionAmount);
+      if (contributionAmount === null || contributionAmount < 0) {
+        nextErrors.contributionAmount = "Enter a contribution of 0 or higher.";
       }
     }
 
@@ -110,7 +117,7 @@ export default function App() {
         annualRatePercent: annualRatePercent ?? 0,
         years: years ?? 0,
         compoundsPerYear: compoundsPerYear ?? 0,
-        monthlyContribution: monthlyContribution ?? 0,
+        contributionAmount: contributionAmount ?? 0,
       },
       errors: nextErrors,
     };
@@ -130,7 +137,8 @@ export default function App() {
       annualRatePercent: parsed.annualRatePercent,
       years: parsed.years,
       compoundsPerYear: parsed.compoundsPerYear,
-      monthlyContribution: parsed.monthlyContribution,
+      contributionAmount: parsed.contributionAmount,
+      contributionFrequency: formState.contributionFrequency,
     });
     setResult(calculation);
   }
@@ -231,22 +239,40 @@ export default function App() {
           </div>
 
           <div className="field">
-            <label htmlFor="monthlyContribution">Monthly contribution (optional)</label>
+            <label htmlFor="contributionAmount">Contribution amount (optional)</label>
             <input
-              id="monthlyContribution"
-              name="monthlyContribution"
+              id="contributionAmount"
+              name="contributionAmount"
               inputMode="decimal"
-              value={formState.monthlyContribution}
-              onChange={(event) => updateField("monthlyContribution", event.target.value)}
+              value={formState.contributionAmount}
+              onChange={(event) => updateField("contributionAmount", event.target.value)}
               placeholder="200"
-              aria-invalid={Boolean(errors.monthlyContribution)}
-              aria-describedby={errors.monthlyContribution ? "contrib-error" : undefined}
+              aria-invalid={Boolean(errors.contributionAmount)}
+              aria-describedby={errors.contributionAmount ? "contrib-error" : undefined}
             />
-            {errors.monthlyContribution ? (
+            {errors.contributionAmount ? (
               <span className="error" id="contrib-error">
-                {errors.monthlyContribution}
+                {errors.contributionAmount}
               </span>
             ) : null}
+          </div>
+
+          <div className="field">
+            <label htmlFor="contributionFrequency">Contribution frequency</label>
+            <select
+              id="contributionFrequency"
+              name="contributionFrequency"
+              value={formState.contributionFrequency}
+              onChange={(event) =>
+                updateField(
+                  "contributionFrequency",
+                  event.target.value as FormState["contributionFrequency"]
+                )
+              }
+            >
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
           </div>
 
           <button className="btn" type="submit">
@@ -339,22 +365,24 @@ export default function App() {
               <thead>
                 <tr>
                   <th>Year</th>
-                  <th>End balance</th>
                   <th>Yearly contributions</th>
                   <th>Yearly interest</th>
                   <th>Total contributions</th>
                   <th>Total interest</th>
+                  <th>End balance</th>
                 </tr>
               </thead>
               <tbody>
                 {result.yearlyRows.map((row) => (
                   <tr key={row.yearLabel}>
                     <td>{row.yearLabel}</td>
-                    <td>{numberFormatter.format(row.endBalance)}</td>
                     <td>{numberFormatter.format(row.yearlyContributions)}</td>
                     <td>{numberFormatter.format(row.yearlyInterest)}</td>
                     <td>{numberFormatter.format(row.totalContributions)}</td>
                     <td>{numberFormatter.format(row.totalInterest)}</td>
+                    <td className="end-balance">
+                      {numberFormatter.format(row.endBalance)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
