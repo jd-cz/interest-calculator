@@ -7,6 +7,14 @@ npm install
 npm run dev
 ```
 
+## Tests
+
+```bash
+npm test
+```
+
+The GitHub Pages workflow runs `npm test` before building, so deployments fail if unit tests fail.
+
 ## Manual test scenarios
 
 Scenario 1
